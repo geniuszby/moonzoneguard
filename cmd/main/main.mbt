@@ -74,11 +74,34 @@ fn main {
       }
       match (load(args[3]), load(args[4])) {
         (Some(before), Some(after)) => {
-          let diff = @lib.compare_zones(
-            @lib.parse_zone(before, args[5]),
-            @lib.parse_zone(after, args[5]),
-          )
           let format = if args.length() > 6 { args[6] } else { "text" }
+          if format != "text" && format != "json" {
+            usage()
+            @sys.exit(2)
+            return
+          }
+          let before_zone = @lib.parse_zone(before, args[5])
+          let after_zone = @lib.parse_zone(after, args[5])
+          let before_findings = @lib.validate_zone(before_zone)
+          let after_findings = @lib.validate_zone(after_zone)
+          if @lib.error_count(before_findings) > 0 ||
+            @lib.error_count(after_findings) > 0 {
+            if format == "json" {
+              println(
+                "{\"before\":\{@lib.render_diagnostics_json(before_findings)},\"after\":\{@lib.render_diagnostics_json(after_findings)}}",
+              )
+            } else {
+              println(
+                "Before zone:\n\{@lib.render_diagnostics_text(before_findings)}",
+              )
+              println(
+                "After zone:\n\{@lib.render_diagnostics_text(after_findings)}",
+              )
+            }
+            @sys.exit(1)
+            return
+          }
+          let diff = @lib.compare_zones(before_zone, after_zone)
           if args[2] == "impact" {
             let impact = @lib.assess_impact(diff, args[5])
             if format == "json" {

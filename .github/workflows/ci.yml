@@ -31,3 +31,9 @@ jobs:
             echo "Expected diagnostics from bad.zone"
             exit 1
           fi
+      - name: Reject invalid revision
+        run: |
+          if moon run cmd/main --target js diff examples/good.zone examples/invalid-soa.zone example.org.; then
+            echo "Expected the missing SOA to block comparison"
+            exit 1
+          fi

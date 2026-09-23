@@ -23,6 +23,8 @@ moon run cmd/main --target js normalize examples/good.zone example.org.
 
 `check` 返回 0 表示没有 error，1 表示有 error，2 表示参数或文件错误。warning 不使检查失败。`diff` 在 SOA serial 未按要求前进时返回 1。输出格式：`text`、`json`、`markdown`（差异比较支持前两者）。`origin` 请写为末尾带点的绝对域名。
 
+`diff` 和 `impact` 会先校验变更前后的区域文件；任一文件存在错误时返回诊断，不给出可能误导的变化摘要。可以用 `examples/invalid-soa.zone` 复现这一情况。
+
 ## 能检查什么
 
 - `$ORIGIN`、`$TTL`、相对/绝对所有者名称、继承所有者、括号跨行记录、注释和引号文本；
