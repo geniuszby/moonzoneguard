@@ -150,7 +150,13 @@ fn parse_directive(
         add_parse_error(diagnostics, "Z010", "$ORIGIN requires one name", stmt)
         (current_origin, default_ttl)
       } else {
-        (absolute_name(stmt.tokens[1].text, current_origin), default_ttl)
+        let next_origin = absolute_name(stmt.tokens[1].text, current_origin)
+        if valid_domain_name(next_origin) {
+          (next_origin, default_ttl)
+        } else {
+          add_parse_error(diagnostics, "Z031", "invalid $ORIGIN name", stmt)
+          (current_origin, default_ttl)
+        }
       }
     "$TTL" =>
       if stmt.tokens.length() != 2 {
@@ -292,6 +298,11 @@ pub fn parse_zone(input : String, origin : String) -> Zone {
   let diagnostics = lexical.diagnostics
   let records : Array[ResourceRecord] = []
   let initial_origin = absolute_name("@", origin)
+  if !valid_domain_name(initial_origin) {
+    diagnostics.push(
+      diagnostic("Z030", "error", "invalid initial zone origin", 1, 1),
+    )
+  }
   let mut current_origin = initial_origin
   let mut previous_owner = ""
   let mut default_ttl = 3600
