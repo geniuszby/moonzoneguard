@@ -33,7 +33,7 @@ moon run cmd/main --target js normalize examples/good.zone example.org.
 - 两份区域文件的新增、移除、TTL 变化及 SOA serial 的 RFC 1982 序列比较。
 - 可选团队策略（TTL 上下限、顶点 NS 数量、邮件 IPv6、禁用记录类型）、记录统计、CNAME 路径追踪、本地区域查询、规范化输出和变更风险摘要。
 
-诊断包含规则代码、严重程度、消息、行列和所有者。JSON 格式适合 CI 消费；Markdown 格式适合贴到代码审查。
+诊断包含规则代码、严重程度、消息、行列和所有者。JSON 格式适合 CI 消费；Markdown 格式适合贴到代码审查。三个完整操作流程及预期结果见 [SCENARIOS.md](SCENARIOS.md)。
 
 ## 运行测试与构建
 

@@ -37,3 +37,11 @@ jobs:
             echo "Expected the missing SOA to block comparison"
             exit 1
           fi
+      - name: Change review scenario
+        run: |
+          moon run cmd/main --target js diff examples/good.zone examples/good-next.zone example.org.
+          moon run cmd/main --target js impact examples/good.zone examples/good-next.zone example.org.
+      - name: Team policy scenario
+        run: |
+          moon run cmd/main --target js policy examples/good.zone example.org. examples/review.policy
+          moon run cmd/main --target js lookup examples/good.zone example.org. docs A
