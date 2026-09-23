@@ -175,9 +175,36 @@ fn serial_diagnostics(
 pub fn compare_zones(before : Zone, after : Zone) -> ZoneDiff {
   let changes : Array[ZoneChange] = []
   let diagnostics : Array[Diagnostic] = []
+  for item in before.diagnostics {
+    diagnostics.push(
+      diagnostic(
+        "D010",
+        "error",
+        "before zone has \{item.code}: \{item.message}",
+        item.line,
+        item.column,
+        owner=item.owner,
+      ),
+    )
+  }
+  for item in after.diagnostics {
+    diagnostics.push(
+      diagnostic(
+        "D011",
+        "error",
+        "after zone has \{item.code}: \{item.message}",
+        item.line,
+        item.column,
+        owner=item.owner,
+      ),
+    )
+  }
+  if diagnostics.length() > 0 {
+    return { changes, diagnostics, serial_order: None, }
+  }
   if before.origin != after.origin {
     diagnostics.push(diagnostic("D001", "error", "zone origins differ", 1, 1))
-    return { changes, diagnostics, serial_order: None }
+    return { changes, diagnostics, serial_order: None, }
   }
   collect_removed(before, record_index(after), changes)
   collect_added(after, record_index(before), changes)
@@ -189,5 +216,5 @@ pub fn compare_zones(before : Zone, after : Zone) -> ZoneDiff {
   for item in serial_notes {
     diagnostics.push(item)
   }
-  { changes, diagnostics, serial_order }
+  { changes, diagnostics, serial_order, }
 }

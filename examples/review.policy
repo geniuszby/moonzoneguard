@@ -1,0 +1,6 @@
+# A team-specific profile for production DNS changes.
+min-ttl 300
+max-ttl 86400
+min-apex-ns 2
+require-ipv6-for-mail yes
+forbid-type SPF

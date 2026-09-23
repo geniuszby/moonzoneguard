@@ -318,5 +318,5 @@ pub fn parse_zone(input : String, origin : String) -> Zone {
       }
     }
   }
-  { origin: initial_origin, records, diagnostics }
+  { origin: initial_origin, records, diagnostics, }
 }

@@ -6,7 +6,7 @@ fn json_hex_digit(n : Int) -> Char {
 
 ///|
 fn json_escaped(value : String) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_char('"')
   for c in value {
     match c {
@@ -76,7 +76,7 @@ fn write_diagnostic_json(out : StringBuilder, item : Diagnostic) -> Unit {
 ///|
 /// Render a deterministic, parseable JSON diagnostics object.
 pub fn render_diagnostics_json(items : Array[Diagnostic]) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string("{\"errors\":")
   out.write_string(error_count(items).to_string())
   out.write_string(",\"warnings\":")
@@ -100,7 +100,7 @@ fn diagnostic_line(item : Diagnostic) -> String {
 ///|
 /// Render diagnostics for terminal display.
 pub fn render_diagnostics_text(items : Array[Diagnostic]) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for item in items {
     out.write_string(diagnostic_line(item))
     if item.owner != "" {
@@ -118,7 +118,7 @@ pub fn render_diagnostics_text(items : Array[Diagnostic]) -> String {
 
 ///|
 fn markdown_escape(text : String) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for c in text {
     if c == '|' {
       out.write_string("\\|")
@@ -134,7 +134,7 @@ fn markdown_escape(text : String) -> String {
 ///|
 /// Render a compact review report suitable for a pull request description.
 pub fn render_diagnostics_markdown(items : Array[Diagnostic]) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string("# MoonZoneGuard report\n\n")
   out.write_string(
     "Errors: \{error_count(items)} · Warnings: \{warning_count(items)}\n\n",
@@ -192,7 +192,7 @@ fn write_change_json(out : StringBuilder, change : ZoneChange) -> Unit {
 
 ///|
 pub fn render_diff_json(diff : ZoneDiff) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string("{\"changes\":[")
   for i in 0..<diff.changes.length() {
     if i > 0 {
@@ -213,7 +213,7 @@ pub fn render_diff_json(diff : ZoneDiff) -> String {
 
 ///|
 pub fn render_diff_text(diff : ZoneDiff) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for change in diff.changes {
     out.write_string(change.kind)
     out.write_char(' ')

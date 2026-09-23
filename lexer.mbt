@@ -32,7 +32,7 @@ fn flush_token(
   column : Int,
 ) -> Unit {
   if active {
-    tokens.push({ text: builder.to_string(), line, column })
+    tokens.push({ text: builder.to_string(), line, column, })
   }
 }
 
@@ -43,7 +43,7 @@ fn lex_zone(input : String) -> LexResult {
   let statements : Array[Statement] = []
   let diagnostics : Array[Diagnostic] = []
   let mut tokens : Array[Token] = []
-  let mut builder = StringBuilder::new()
+  let mut builder = StringBuilder()
   let mut active = false
   let mut quoted = false
   let mut escaped = false
@@ -69,16 +69,16 @@ fn lex_zone(input : String) -> LexResult {
         )
         quoted = false
         flush_token(tokens, builder, active, token_line, token_column)
-        builder = StringBuilder::new()
+        builder = StringBuilder()
         active = false
       } else {
         flush_token(tokens, builder, active, token_line, token_column)
-        builder = StringBuilder::new()
+        builder = StringBuilder()
         active = false
       }
       comment = false
       if depth == 0 && tokens.length() > 0 {
-        statements.push({ tokens, indented, line: statement_line })
+        statements.push({ tokens, indented, line: statement_line, })
         tokens = []
       }
       line += 1
@@ -133,7 +133,7 @@ fn lex_zone(input : String) -> LexResult {
     }
     if !quoted && c == ';' {
       flush_token(tokens, builder, active, token_line, token_column)
-      builder = StringBuilder::new()
+      builder = StringBuilder()
       active = false
       comment = true
       column += 1
@@ -141,7 +141,7 @@ fn lex_zone(input : String) -> LexResult {
     }
     if !quoted && (c == '(' || c == ')') {
       flush_token(tokens, builder, active, token_line, token_column)
-      builder = StringBuilder::new()
+      builder = StringBuilder()
       active = false
       if c == '(' {
         depth += 1
@@ -159,7 +159,7 @@ fn lex_zone(input : String) -> LexResult {
     }
     if !quoted && is_space(c) {
       flush_token(tokens, builder, active, token_line, token_column)
-      builder = StringBuilder::new()
+      builder = StringBuilder()
       active = false
       column += 1
       continue
@@ -191,7 +191,7 @@ fn lex_zone(input : String) -> LexResult {
   }
   flush_token(tokens, builder, active, token_line, token_column)
   if tokens.length() > 0 {
-    statements.push({ tokens, indented, line: statement_line })
+    statements.push({ tokens, indented, line: statement_line, })
   }
-  { statements, diagnostics }
+  { statements, diagnostics, }
 }

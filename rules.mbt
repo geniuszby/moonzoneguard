@@ -5,15 +5,15 @@ fn is_dnssec_companion(record_type : String) -> Bool {
 
 ///|
 fn data_key(record : ResourceRecord) -> String {
-  let builder = StringBuilder::new()
+  let builder = StringBuilder()
   builder.write_string(record.owner)
   builder.write_char('|')
   builder.write_string(record.class_name)
   builder.write_char('|')
   builder.write_string(record.record_type)
-  for item in record.rdata {
+  for index in 0..<record.rdata.length() {
     builder.write_char('|')
-    builder.write_string(lower(item))
+    builder.write_string(canonical_rdata_field(record, index))
   }
   builder.to_string()
 }
@@ -244,6 +244,7 @@ pub fn validate_zone(zone : Zone) -> Array[Diagnostic] {
   check_alias_coexistence(zone, diagnostics)
   check_alias_cycles(zone, diagnostics)
   check_zone_integrity(zone, diagnostics)
+  check_mail_security(zone, diagnostics)
   diagnostics
 }
 

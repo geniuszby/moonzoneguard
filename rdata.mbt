@@ -46,6 +46,27 @@ fn is_hex(c : Char) -> Bool {
 /// Check the text form of an IPv6 address without accepting zone identifiers.
 pub fn valid_ipv6(value : String) -> Bool {
   let chars = value.to_array()
+  let mut dotted = false
+  let mut last_colon = -1
+  for index in 0..<chars.length() {
+    if chars[index] == '.' {
+      dotted = true
+    }
+    if chars[index] == ':' {
+      last_colon = index
+    }
+  }
+  if dotted {
+    if last_colon < 0 || last_colon == chars.length() - 1 {
+      return false
+    }
+    let suffix = value[last_colon + 1:].to_owned()
+    if !valid_ipv4(suffix) {
+      return false
+    }
+    let prefix = value[:last_colon].to_owned()
+    return valid_ipv6(prefix + ":0:0")
+  }
   if chars.length() < 2 || chars.length() > 39 {
     return false
   }

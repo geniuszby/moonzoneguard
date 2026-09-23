@@ -6,7 +6,18 @@ fn usage() -> Unit {
   println(
     "  moonzoneguard diff <before-file> <after-file> <origin> [text|json]",
   )
-  println("  moonzoneguard stats <zone-file> <origin>")
+  println(
+    "  moonzoneguard impact <before-file> <after-file> <origin> [text|json]",
+  )
+  println("  moonzoneguard stats <zone-file> <origin> [text|json]")
+  println("  moonzoneguard trace <zone-file> <origin> <owner>")
+  println("  moonzoneguard normalize <zone-file> <origin>")
+  println(
+    "  moonzoneguard lookup <zone-file> <origin> <name> <type> [text|json]",
+  )
+  println(
+    "  moonzoneguard policy <zone-file> <origin> <policy-file> [text|json|markdown]",
+  )
 }
 
 ///|
@@ -55,7 +66,7 @@ fn main {
         }
       }
     }
-    "diff" => {
+    "diff" | "impact" => {
       if args.length() < 6 {
         usage()
         @sys.exit(2)
@@ -68,7 +79,17 @@ fn main {
             @lib.parse_zone(after, args[5]),
           )
           let format = if args.length() > 6 { args[6] } else { "text" }
-          if format == "json" {
+          if args[2] == "impact" {
+            let impact = @lib.assess_impact(diff, args[5])
+            if format == "json" {
+              println(@lib.render_impact_json(impact))
+            } else if format == "text" {
+              println(@lib.render_impact_text(impact))
+            } else {
+              usage()
+              @sys.exit(2)
+            }
+          } else if format == "json" {
             println(@lib.render_diff_json(diff))
           } else if format == "text" {
             println(@lib.render_diff_text(diff))
@@ -94,14 +115,125 @@ fn main {
         Some(source) => {
           let zone = @lib.parse_zone(source, args[4])
           let findings = @lib.validate_zone(zone)
-          println("origin: \{zone.origin}")
-          println("records: \{zone.records.length()}")
-          println("errors: \{@lib.error_count(findings)}")
-          println("warnings: \{@lib.warning_count(findings)}")
+          let inventory = @lib.inventory_zone(zone)
+          let format = if args.length() > 5 { args[5] } else { "text" }
+          if format == "json" {
+            println(@lib.render_inventory_json(inventory))
+          } else if format == "text" {
+            println(@lib.render_inventory_text(inventory))
+            println("errors: \{@lib.error_count(findings)}")
+            println("warnings: \{@lib.warning_count(findings)}")
+          } else {
+            usage()
+            @sys.exit(2)
+          }
           if @lib.error_count(findings) > 0 {
             @sys.exit(1)
           }
         }
+      }
+    }
+    "trace" => {
+      if args.length() < 6 {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      match load(args[3]) {
+        Some(source) => {
+          let trace = @lib.trace_alias(
+            @lib.parse_zone(source, args[4]),
+            args[5],
+          )
+          for name in trace.path {
+            println(name)
+          }
+          if trace.cycle {
+            println("cycle returns to \{trace.terminal}")
+            @sys.exit(1)
+          }
+        }
+        None => ()
+      }
+    }
+    "normalize" => {
+      if args.length() < 5 {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      match load(args[3]) {
+        Some(source) => {
+          let zone = @lib.parse_zone(source, args[4])
+          if @lib.error_count(zone.diagnostics) > 0 {
+            println(@lib.render_diagnostics_text(zone.diagnostics))
+            @sys.exit(1)
+          }
+          println(@lib.render_canonical_zone(zone))
+        }
+        None => ()
+      }
+    }
+    "lookup" => {
+      if args.length() < 7 {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      match load(args[3]) {
+        Some(source) => {
+          let result = @lib.lookup_zone(
+            @lib.parse_zone(source, args[4]),
+            args[5],
+            args[6],
+          )
+          let format = if args.length() > 7 { args[7] } else { "text" }
+          if format == "json" {
+            println(@lib.render_lookup_json(result))
+          } else if format == "text" {
+            println(@lib.render_lookup_text(result))
+          } else {
+            usage()
+            @sys.exit(2)
+          }
+          if result.status == "alias-cycle" || result.status == "invalid-name" {
+            @sys.exit(1)
+          }
+        }
+        None => ()
+      }
+    }
+    "policy" => {
+      if args.length() < 6 {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      match (load(args[3]), load(args[5])) {
+        (Some(source), Some(config)) => {
+          let parsed = @lib.parse_policy(config)
+          let findings = @lib.validate_with_policy(
+            @lib.parse_zone(source, args[4]),
+            parsed.policy,
+          )
+          for item in parsed.diagnostics {
+            findings.push(item)
+          }
+          let format = if args.length() > 6 { args[6] } else { "text" }
+          match format {
+            "json" => println(@lib.render_diagnostics_json(findings))
+            "markdown" => println(@lib.render_diagnostics_markdown(findings))
+            "text" => println(@lib.render_diagnostics_text(findings))
+            _ => {
+              usage()
+              @sys.exit(2)
+            }
+          }
+          if @lib.error_count(findings) > 0 {
+            @sys.exit(1)
+          }
+        }
+        _ => ()
       }
     }
     _ => {

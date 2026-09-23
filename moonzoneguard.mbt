@@ -39,7 +39,7 @@ fn diagnostic(
   column : Int,
   owner? : String = "",
 ) -> Diagnostic {
-  { code, severity, message, line, column, owner }
+  { code, severity, message, line, column, owner, }
 }
 
 ///|
