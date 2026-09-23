@@ -1,0 +1,5 @@
+// import {
+//   "geniuszby/moonzoneguard" @lib,
+// }
+
+pkgtype(kind: "executable")
