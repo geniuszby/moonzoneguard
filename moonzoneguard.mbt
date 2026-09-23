@@ -2,6 +2,7 @@
 /// One parsed DNS resource record. Names are canonical absolute names.
 pub(all) struct ResourceRecord {
   owner : String
+  origin : String
   ttl : Int
   class_name : String
   record_type : String

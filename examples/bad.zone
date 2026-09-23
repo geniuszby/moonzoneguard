@@ -1,0 +1,10 @@
+$ORIGIN example.org.
+$TTL 1h
+@ IN SOA ns.example.org. hostmaster.example.org. 2026092301 1h 15m 1w 1h
+@ IN NS ns.example.org.
+www IN A 999.0.2.1
+www IN CNAME alias.example.org.
+alias IN CNAME www.example.org.
+mail IN MX 10 missing.example.org.
+dup IN A 192.0.2.1
+dup IN A 192.0.2.1

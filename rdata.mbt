@@ -169,7 +169,17 @@ fn check_soa(record : ResourceRecord, origin : String, diagnostics : Array[Diagn
   }
   check_domain_field(record, 0, origin, diagnostics)
   check_domain_field(record, 1, origin, diagnostics)
-  for i in 2..<7 {
+  if parse_serial(record.rdata[2]) is None {
+    diagnostics.push(diagnostic(
+      "Z103",
+      "error",
+      "SOA serial must be a 32-bit unsigned decimal integer",
+      record.line,
+      record.column,
+      owner=record.owner,
+    ))
+  }
+  for i in 3..<7 {
     if parse_ttl(record.rdata[i]) is None {
       diagnostics.push(diagnostic(
         "Z103",

@@ -42,6 +42,9 @@ pub fn valid_domain_name(name : String) -> Bool {
     return false
   }
   for index in 0..<(labels.length() - 1) {
+    if index == 0 && labels[index].to_owned() == "*" {
+      continue
+    }
     if !valid_label(labels[index].to_owned()) {
       return false
     }
@@ -50,8 +53,8 @@ pub fn valid_domain_name(name : String) -> Bool {
 }
 
 ///|
-fn absolute_rdata_name(record : ResourceRecord, index : Int, origin : String) -> String {
-  absolute_name(record.rdata[index], origin)
+fn absolute_rdata_name(record : ResourceRecord, index : Int, _origin : String) -> String {
+  absolute_name(record.rdata[index], record.origin)
 }
 
 ///|

@@ -227,6 +227,7 @@ fn parse_record(
   }
   Some({
     owner,
+    origin: current_origin,
     ttl,
     class_name,
     record_type,

@@ -1,0 +1,18 @@
+$ORIGIN example.org.
+$TTL 1h
+@ IN SOA ns1.example.org. hostmaster.example.org. (
+  2026092301 1h 15m 1w 1h
+)
+@ IN NS ns1.example.org.
+@ IN NS ns2.example.org.
+@ IN MX 10 mail.example.org.
+@ IN CAA 0 issue "letsencrypt.org"
+ns1 IN A 192.0.2.10
+ns2 IN A 192.0.2.11
+mail IN A 192.0.2.20
+www IN A 192.0.2.30
+www IN AAAA 2001:db8::30
+docs IN CNAME www.example.org.
+_sip._tcp IN SRV 10 20 5060 sip.example.org.
+sip IN A 192.0.2.40
+@ IN TXT "MoonZoneGuard example"

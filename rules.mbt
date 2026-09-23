@@ -186,6 +186,7 @@ pub fn validate_zone(zone : Zone) -> Array[Diagnostic] {
   check_duplicate_and_ttl(zone, diagnostics)
   check_alias_coexistence(zone, diagnostics)
   check_alias_cycles(zone, diagnostics)
+  check_zone_integrity(zone, diagnostics)
   diagnostics
 }
 
