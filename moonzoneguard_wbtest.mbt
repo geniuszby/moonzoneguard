@@ -31,3 +31,83 @@ test "parse relative names and inherited owner" {
   assert_eq(zone.records[2].owner, "www.example.org.")
   assert_eq(zone.records[2].ttl, 900)
 }
+
+///|
+fn contains_code(items : Array[Diagnostic], code : String) -> Bool {
+  for item in items {
+    if item.code == code {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn base_zone(extra : String) -> String {
+  "$ORIGIN example.org.\n$TTL 1h\n@ IN SOA ns.example.org. host.example.org. 2026092301 1h 15m 1w 1h\n@ IN NS ns.example.org.\nns IN A 192.0.2.53\n" + extra
+}
+
+///|
+test "valid zone has no diagnostics" {
+  let result = inspect_zone(base_zone("www IN A 192.0.2.1\n"), "example.org.")
+  assert_eq(result.length(), 0)
+}
+
+///|
+test "invalid IPv4 and IPv6 are diagnosed" {
+  let result = inspect_zone(
+    base_zone("www IN A 192.0.2.999\nwww IN AAAA 2001:::1\n"),
+    "example.org.",
+  )
+  assert_true(contains_code(result, "Z102"))
+}
+
+///|
+test "CNAME data conflict is diagnosed" {
+  let result = inspect_zone(
+    base_zone("alias IN CNAME www.example.org.\nalias IN A 192.0.2.3\n"),
+    "example.org.",
+  )
+  assert_true(contains_code(result, "Z220"))
+}
+
+///|
+test "CNAME cycle is diagnosed" {
+  let result = inspect_zone(
+    base_zone("a IN CNAME b.example.org.\nb IN CNAME a.example.org.\n"),
+    "example.org.",
+  )
+  assert_true(contains_code(result, "Z223"))
+}
+
+///|
+test "missing SOA and NS are diagnosed" {
+  let result = inspect_zone("$TTL 1h\nwww IN A 192.0.2.1\n", "example.org.")
+  assert_true(contains_code(result, "Z204"))
+  assert_true(contains_code(result, "Z206"))
+}
+
+///|
+test "mixed TTL in RRset is diagnosed" {
+  let result = inspect_zone(
+    base_zone("www 1h IN A 192.0.2.1\nwww 2h IN A 192.0.2.2\n"),
+    "example.org.",
+  )
+  assert_true(contains_code(result, "Z211"))
+}
+
+///|
+test "record data arity is checked" {
+  let result = inspect_zone(base_zone("www IN MX 10\n"), "example.org.")
+  assert_true(contains_code(result, "Z100"))
+}
+
+///|
+test "address format helpers" {
+  assert_true(valid_ipv4("192.0.2.1"))
+  assert_true(!valid_ipv4("192.0.2.256"))
+  assert_true(!valid_ipv4("192.0.2"))
+  assert_true(valid_ipv6("2001:db8::1"))
+  assert_true(valid_ipv6("::1"))
+  assert_true(!valid_ipv6("2001:::1"))
+}
