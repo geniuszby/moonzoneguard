@@ -111,3 +111,46 @@ test "address format helpers" {
   assert_true(valid_ipv6("::1"))
   assert_true(!valid_ipv6("2001:::1"))
 }
+
+///|
+test "serial arithmetic handles wraparound and ambiguous half range" {
+  assert_eq(parse_serial("4294967295"), Some(4294967295U))
+  assert_eq(parse_serial("4294967296"), None)
+  assert_eq(compare_serial(4294967295U, 0U), SerialOrder::Forward)
+  assert_eq(compare_serial(10U, 9U), SerialOrder::Backward)
+  assert_eq(compare_serial(0U, 2147483648U), SerialOrder::Undefined)
+}
+
+///|
+test "zone diff distinguishes addition and TTL change" {
+  let before = parse_zone(
+    base_zone("www IN A 192.0.2.1\n"),
+    "example.org.",
+  )
+  let after = parse_zone(
+    "$ORIGIN example.org.\n$TTL 1h\n@ IN SOA ns.example.org. host.example.org. 2026092302 1h 15m 1w 1h\n@ IN NS ns.example.org.\nns IN A 192.0.2.53\nwww 2h IN A 192.0.2.1\nmail IN A 192.0.2.2\n",
+    "example.org.",
+  )
+  let result = compare_zones(before, after)
+  assert_eq(result.serial_order, Some(SerialOrder::Forward))
+  assert_eq(result.changes.length(), 4)
+  let mut ttl_change = false
+  let mut addition = false
+  for change in result.changes {
+    if change.kind == "ttl-changed" && change.owner == "www.example.org." {
+      ttl_change = true
+    }
+    if change.kind == "added" && change.owner == "mail.example.org." {
+      addition = true
+    }
+  }
+  assert_true(ttl_change && addition)
+}
+
+///|
+test "unchanged SOA serial blocks modified zone" {
+  let before = parse_zone(base_zone("www IN A 192.0.2.1\n"), "example.org.")
+  let after = parse_zone(base_zone("www IN A 192.0.2.2\n"), "example.org.")
+  let result = compare_zones(before, after)
+  assert_true(contains_code(result.diagnostics, "D300"))
+}
