@@ -30,7 +30,12 @@ fn record_index(zone : Zone) -> Map[String, Array[ResourceRecord]] {
 }
 
 ///|
-fn to_change(kind : String, record : ResourceRecord, before_ttl : Int?, after_ttl : Int?) -> ZoneChange {
+fn to_change(
+  kind : String,
+  record : ResourceRecord,
+  before_ttl : Int?,
+  after_ttl : Int?,
+) -> ZoneChange {
   {
     kind,
     owner: record.owner,
@@ -57,13 +62,19 @@ fn collect_removed(
     }
     positions.set(key, position + 1)
     match after_index.get(key) {
-      Some(matches) => {
+      Some(matches) =>
         if position >= matches.length() {
           changes.push(to_change("removed", record, Some(record.ttl), None))
         } else if matches[position].ttl != record.ttl {
-          changes.push(to_change("ttl-changed", record, Some(record.ttl), Some(matches[position].ttl)))
+          changes.push(
+            to_change(
+              "ttl-changed",
+              record,
+              Some(record.ttl),
+              Some(matches[position].ttl),
+            ),
+          )
         }
-      }
       None => changes.push(to_change("removed", record, Some(record.ttl), None))
     }
   }
@@ -84,57 +95,76 @@ fn collect_added(
     }
     positions.set(key, position + 1)
     match before_index.get(key) {
-      Some(matches) => {
+      Some(matches) =>
         if position >= matches.length() {
           changes.push(to_change("added", record, None, Some(record.ttl)))
         }
-      }
       None => changes.push(to_change("added", record, None, Some(record.ttl)))
     }
   }
 }
 
 ///|
-fn serial_diagnostics(before : Zone, after : Zone, changed : Bool) -> (Array[Diagnostic], SerialOrder?) {
+fn serial_diagnostics(
+  before : Zone,
+  after : Zone,
+  changed : Bool,
+) -> (Array[Diagnostic], SerialOrder?) {
   let diagnostics : Array[Diagnostic] = []
   match (apex_serial(before), apex_serial(after)) {
     (Some(old_serial), Some(new_serial)) => {
       let order = compare_serial(old_serial, new_serial)
       match order {
-        Same => {
+        Same =>
           if changed {
-            diagnostics.push(diagnostic(
-              "D300",
+            diagnostics.push(
+              diagnostic(
+                "D300",
+                "error",
+                "zone content changed without advancing the SOA serial",
+                1,
+                1,
+                owner=after.origin,
+              ),
+            )
+          }
+        Forward => ()
+        Backward =>
+          diagnostics.push(
+            diagnostic(
+              "D301",
               "error",
-              "zone content changed without advancing the SOA serial",
+              "SOA serial moves backward under RFC 1982 arithmetic",
               1,
               1,
               owner=after.origin,
-            ))
-          }
-        }
-        Forward => ()
-        Backward => diagnostics.push(diagnostic(
-          "D301",
-          "error",
-          "SOA serial moves backward under RFC 1982 arithmetic",
-          1,
-          1,
-          owner=after.origin,
-        ))
-        Undefined => diagnostics.push(diagnostic(
-          "D302",
-          "error",
-          "SOA serial delta is undefined under RFC 1982 arithmetic",
-          1,
-          1,
-          owner=after.origin,
-        ))
+            ),
+          )
+        Undefined =>
+          diagnostics.push(
+            diagnostic(
+              "D302",
+              "error",
+              "SOA serial delta is undefined under RFC 1982 arithmetic",
+              1,
+              1,
+              owner=after.origin,
+            ),
+          )
       }
       (diagnostics, Some(order))
     }
     _ => {
-      diagnostics.push(diagnostic("D303", "warning", "cannot compare SOA serials", 1, 1, owner=after.origin))
+      diagnostics.push(
+        diagnostic(
+          "D303",
+          "warning",
+          "cannot compare SOA serials",
+          1,
+          1,
+          owner=after.origin,
+        ),
+      )
       (diagnostics, None)
     }
   }
@@ -151,7 +181,11 @@ pub fn compare_zones(before : Zone, after : Zone) -> ZoneDiff {
   }
   collect_removed(before, record_index(after), changes)
   collect_added(after, record_index(before), changes)
-  let (serial_notes, serial_order) = serial_diagnostics(before, after, changes.length() > 0)
+  let (serial_notes, serial_order) = serial_diagnostics(
+    before,
+    after,
+    changes.length() > 0,
+  )
   for item in serial_notes {
     diagnostics.push(item)
   }

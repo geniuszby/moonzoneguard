@@ -62,7 +62,11 @@ fn lex_zone(input : String) -> LexResult {
         builder.write_char(c)
         escaped = false
       } else if quoted {
-        diagnostics.push(diagnostic("Z001", "error", "unterminated quoted text", token_line, token_column))
+        diagnostics.push(
+          diagnostic(
+            "Z001", "error", "unterminated quoted text", token_line, token_column,
+          ),
+        )
         quoted = false
         flush_token(tokens, builder, active, token_line, token_column)
         builder = StringBuilder::new()
@@ -142,7 +146,11 @@ fn lex_zone(input : String) -> LexResult {
       if c == '(' {
         depth += 1
       } else if depth == 0 {
-        diagnostics.push(diagnostic("Z002", "error", "unmatched closing parenthesis", line, column))
+        diagnostics.push(
+          diagnostic(
+            "Z002", "error", "unmatched closing parenthesis", line, column,
+          ),
+        )
       } else {
         depth -= 1
       }
@@ -165,13 +173,21 @@ fn lex_zone(input : String) -> LexResult {
     column += 1
   }
   if escaped {
-    diagnostics.push(diagnostic("Z003", "error", "unfinished escape", token_line, token_column))
+    diagnostics.push(
+      diagnostic("Z003", "error", "unfinished escape", token_line, token_column),
+    )
   }
   if quoted {
-    diagnostics.push(diagnostic("Z001", "error", "unterminated quoted text", token_line, token_column))
+    diagnostics.push(
+      diagnostic(
+        "Z001", "error", "unterminated quoted text", token_line, token_column,
+      ),
+    )
   }
   if depth > 0 {
-    diagnostics.push(diagnostic("Z004", "error", "unclosed parenthesis", statement_line, 1))
+    diagnostics.push(
+      diagnostic("Z004", "error", "unclosed parenthesis", statement_line, 1),
+    )
   }
   flush_token(tokens, builder, active, token_line, token_column)
   if tokens.length() > 0 {

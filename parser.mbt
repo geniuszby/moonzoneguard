@@ -22,7 +22,11 @@ fn ends_in_dot(text : String) -> Bool {
 ///|
 /// Convert a master-file owner or domain-valued RDATA to an absolute DNS name.
 pub fn absolute_name(name : String, origin : String) -> String {
-  let canonical_origin = if ends_in_dot(origin) { lower(origin) } else { lower(origin) + "." }
+  let canonical_origin = if ends_in_dot(origin) {
+    lower(origin)
+  } else {
+    lower(origin) + "."
+  }
   if name == "@" {
     canonical_origin
   } else if name == "." {
@@ -97,9 +101,26 @@ fn is_class(input : String) -> Bool {
 ///|
 fn is_record_type(input : String) -> Bool {
   match upper(input) {
-    "A" | "AAAA" | "NS" | "SOA" | "CNAME" | "MX" | "TXT" | "PTR" |
-    "SRV" | "CAA" | "DS" | "DNSKEY" | "RRSIG" | "NSEC" | "NSEC3" |
-    "TLSA" | "SSHFP" | "NAPTR" | "SPF" | "LOC" => true
+    "A"
+    | "AAAA"
+    | "NS"
+    | "SOA"
+    | "CNAME"
+    | "MX"
+    | "TXT"
+    | "PTR"
+    | "SRV"
+    | "CAA"
+    | "DS"
+    | "DNSKEY"
+    | "RRSIG"
+    | "NSEC"
+    | "NSEC3"
+    | "TLSA"
+    | "SSHFP"
+    | "NAPTR"
+    | "SPF"
+    | "LOC" => true
     _ => false
   }
 }
@@ -124,15 +145,14 @@ fn parse_directive(
 ) -> (String, Int) {
   let head = upper(stmt.tokens[0].text)
   match head {
-    "$ORIGIN" => {
+    "$ORIGIN" =>
       if stmt.tokens.length() != 2 {
         add_parse_error(diagnostics, "Z010", "$ORIGIN requires one name", stmt)
         (current_origin, default_ttl)
       } else {
         (absolute_name(stmt.tokens[1].text, current_origin), default_ttl)
       }
-    }
-    "$TTL" => {
+    "$TTL" =>
       if stmt.tokens.length() != 2 {
         add_parse_error(diagnostics, "Z011", "$TTL requires one duration", stmt)
         (current_origin, default_ttl)
@@ -145,18 +165,17 @@ fn parse_directive(
           }
         }
       }
-    }
     "$INCLUDE" | "$GENERATE" => {
       add_parse_error(
-        diagnostics,
-        "Z013",
-        "directive is outside the supported offline subset",
+        diagnostics, "Z013", "directive is outside the supported offline subset",
         stmt,
       )
       (current_origin, default_ttl)
     }
     _ => {
-      add_parse_error(diagnostics, "Z014", "unknown master-file directive", stmt)
+      add_parse_error(
+        diagnostics, "Z014", "unknown master-file directive", stmt,
+      )
       (current_origin, default_ttl)
     }
   }
@@ -174,7 +193,9 @@ fn parse_record(
   let mut index = 0
   let owner = if stmt.indented {
     if previous_owner == "" {
-      add_parse_error(diagnostics, "Z020", "inherited owner has no preceding record", stmt)
+      add_parse_error(
+        diagnostics, "Z020", "inherited owner has no preceding record", stmt,
+      )
       return None
     }
     previous_owner
@@ -190,7 +211,16 @@ fn parse_record(
     let token = tokens[index]
     if is_class(token.text) {
       if seen_class {
-        diagnostics.push(diagnostic("Z021", "error", "duplicate DNS class", token.line, token.column, owner=owner))
+        diagnostics.push(
+          diagnostic(
+            "Z021",
+            "error",
+            "duplicate DNS class",
+            token.line,
+            token.column,
+            owner~,
+          ),
+        )
       }
       class_name = upper(token.text)
       seen_class = true
@@ -198,13 +228,31 @@ fn parse_record(
       match parse_ttl(token.text) {
         Some(value) => {
           if seen_ttl {
-            diagnostics.push(diagnostic("Z022", "error", "duplicate TTL", token.line, token.column, owner=owner))
+            diagnostics.push(
+              diagnostic(
+                "Z022",
+                "error",
+                "duplicate TTL",
+                token.line,
+                token.column,
+                owner~,
+              ),
+            )
           }
           ttl = value
           seen_ttl = true
         }
         None => {
-          diagnostics.push(diagnostic("Z023", "error", "unsupported or missing record type", token.line, token.column, owner=owner))
+          diagnostics.push(
+            diagnostic(
+              "Z023",
+              "error",
+              "unsupported or missing record type",
+              token.line,
+              token.column,
+              owner~,
+            ),
+          )
           return None
         }
       }
@@ -253,15 +301,15 @@ pub fn parse_zone(input : String, origin : String) -> Zone {
     }
     if stmt.tokens[0].text.to_array()[0] == '$' {
       let (next_origin, next_ttl) = parse_directive(
-        stmt,
-        current_origin,
-        default_ttl,
-        diagnostics,
+        stmt, current_origin, default_ttl, diagnostics,
       )
       current_origin = next_origin
       default_ttl = next_ttl
     } else {
-      match parse_record(stmt, current_origin, previous_owner, default_ttl, diagnostics) {
+      match
+        parse_record(
+          stmt, current_origin, previous_owner, default_ttl, diagnostics,
+        ) {
         Some(record) => {
           previous_owner = record.owner
           records.push(record)

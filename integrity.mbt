@@ -47,13 +47,18 @@ fn check_in_zone_targets(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
 fn check_apex_alias(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
   for record in zone.records {
     if record.owner == zone.origin && record.record_type == "CNAME" {
-      add_record_note(diagnostics, "Z233", "error", "zone apex cannot be a CNAME", record)
+      add_record_note(
+        diagnostics, "Z233", "error", "zone apex cannot be a CNAME", record,
+      )
     }
   }
 }
 
 ///|
-fn check_singleton_records(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_singleton_records(
+  zone : Zone,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   let owners : Map[String, Int] = Map([])
   for record in zone.records {
     if record.record_type != "CNAME" {
@@ -64,7 +69,9 @@ fn check_singleton_records(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit
       None => 0
     }
     if count > 0 {
-      add_record_note(diagnostics, "Z234", "error", "owner has multiple CNAME records", record)
+      add_record_note(
+        diagnostics, "Z234", "error", "owner has multiple CNAME records", record,
+      )
     }
     owners.set(record.owner, count + 1)
   }

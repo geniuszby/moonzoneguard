@@ -44,7 +44,8 @@ fn contains_code(items : Array[Diagnostic], code : String) -> Bool {
 
 ///|
 fn base_zone(extra : String) -> String {
-  "$ORIGIN example.org.\n$TTL 1h\n@ IN SOA ns.example.org. host.example.org. 2026092301 1h 15m 1w 1h\n@ IN NS ns.example.org.\nns IN A 192.0.2.53\n" + extra
+  "$ORIGIN example.org.\n$TTL 1h\n@ IN SOA ns.example.org. host.example.org. 2026092301 1h 15m 1w 1h\n@ IN NS ns.example.org.\nns IN A 192.0.2.53\n" +
+  extra
 }
 
 ///|
@@ -123,10 +124,7 @@ test "serial arithmetic handles wraparound and ambiguous half range" {
 
 ///|
 test "zone diff distinguishes addition and TTL change" {
-  let before = parse_zone(
-    base_zone("www IN A 192.0.2.1\n"),
-    "example.org.",
-  )
+  let before = parse_zone(base_zone("www IN A 192.0.2.1\n"), "example.org.")
   let after = parse_zone(
     "$ORIGIN example.org.\n$TTL 1h\n@ IN SOA ns.example.org. host.example.org. 2026092302 1h 15m 1w 1h\n@ IN NS ns.example.org.\nns IN A 192.0.2.53\nwww 2h IN A 192.0.2.1\nmail IN A 192.0.2.2\n",
     "example.org.",

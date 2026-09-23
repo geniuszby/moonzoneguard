@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Resolve dependencies
+        run: moon update
+      - name: Format
+        run: moon fmt --check
+      - name: Check
+        run: moon check --target js --deny-warn
+      - name: Test
+        run: moon test --target js
+      - name: Build
+        run: moon build --target js
+      - name: Valid sample
+        run: moon run cmd/main --target js check examples/good.zone example.org.
+      - name: Invalid sample
+        run: |
+          if moon run cmd/main --target js check examples/bad.zone example.org.; then
+            echo "Expected diagnostics from bad.zone"
+            exit 1
+          fi

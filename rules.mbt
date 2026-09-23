@@ -31,14 +31,16 @@ fn add_record_note(
   message : String,
   record : ResourceRecord,
 ) -> Unit {
-  diagnostics.push(diagnostic(
-    code,
-    severity,
-    message,
-    record.line,
-    record.column,
-    owner=record.owner,
-  ))
+  diagnostics.push(
+    diagnostic(
+      code,
+      severity,
+      message,
+      record.line,
+      record.column,
+      owner=record.owner,
+    ),
+  )
 }
 
 ///|
@@ -47,17 +49,26 @@ fn check_zone_structure(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
   let mut ns_count = 0
   for record in zone.records {
     if !valid_domain_name(record.owner) {
-      add_record_note(diagnostics, "Z200", "error", "invalid owner name", record)
+      add_record_note(
+        diagnostics, "Z200", "error", "invalid owner name", record,
+      )
     }
     if !is_within_zone(record.owner, zone.origin) {
-      add_record_note(diagnostics, "Z201", "error", "owner lies outside the declared zone", record)
+      add_record_note(
+        diagnostics, "Z201", "error", "owner lies outside the declared zone", record,
+      )
     }
     if record.class_name != "IN" {
-      add_record_note(diagnostics, "Z202", "warning", "class is outside the Internet zone profile", record)
+      add_record_note(
+        diagnostics, "Z202", "warning", "class is outside the Internet zone profile",
+        record,
+      )
     }
     if record.record_type == "SOA" {
       if record.owner != zone.origin {
-        add_record_note(diagnostics, "Z203", "error", "SOA must be at the zone apex", record)
+        add_record_note(
+          diagnostics, "Z203", "error", "SOA must be at the zone apex", record,
+        )
       } else {
         soa_count += 1
       }
@@ -67,33 +78,67 @@ fn check_zone_structure(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
     }
   }
   if soa_count == 0 {
-    diagnostics.push(diagnostic("Z204", "error", "zone apex has no SOA record", 1, 1, owner=zone.origin))
+    diagnostics.push(
+      diagnostic(
+        "Z204",
+        "error",
+        "zone apex has no SOA record",
+        1,
+        1,
+        owner=zone.origin,
+      ),
+    )
   } else if soa_count > 1 {
-    diagnostics.push(diagnostic("Z205", "error", "zone apex has more than one SOA record", 1, 1, owner=zone.origin))
+    diagnostics.push(
+      diagnostic(
+        "Z205",
+        "error",
+        "zone apex has more than one SOA record",
+        1,
+        1,
+        owner=zone.origin,
+      ),
+    )
   }
   if ns_count == 0 {
-    diagnostics.push(diagnostic("Z206", "error", "zone apex has no NS record", 1, 1, owner=zone.origin))
+    diagnostics.push(
+      diagnostic(
+        "Z206",
+        "error",
+        "zone apex has no NS record",
+        1,
+        1,
+        owner=zone.origin,
+      ),
+    )
   }
 }
 
 ///|
-fn check_duplicate_and_ttl(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_duplicate_and_ttl(
+  zone : Zone,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   let seen : Map[String, Bool] = Map([])
   let rrset_ttl : Map[String, Int] = Map([])
   for record in zone.records {
     let key = data_key(record)
     if seen.get(key) is Some(_) {
-      add_record_note(diagnostics, "Z210", "warning", "duplicate resource record", record)
+      add_record_note(
+        diagnostics, "Z210", "warning", "duplicate resource record", record,
+      )
     } else {
       seen.set(key, true)
     }
     let group_key = rrset_key(record)
     match rrset_ttl.get(group_key) {
-      Some(previous) => {
+      Some(previous) =>
         if previous != record.ttl {
-          add_record_note(diagnostics, "Z211", "error", "records in one RRset have different TTL values", record)
+          add_record_note(
+            diagnostics, "Z211", "error", "records in one RRset have different TTL values",
+            record,
+          )
         }
-      }
       None => rrset_ttl.set(group_key, record.ttl)
     }
   }
@@ -111,24 +156,34 @@ fn collect_aliases(zone : Zone) -> Map[String, String] {
 }
 
 ///|
-fn check_alias_coexistence(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_alias_coexistence(
+  zone : Zone,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   let aliases = collect_aliases(zone)
   for record in zone.records {
     if record.record_type != "CNAME" && !is_dnssec_companion(record.record_type) {
       if aliases.get(record.owner) is Some(_) {
-        add_record_note(diagnostics, "Z220", "error", "CNAME owner also has other record data", record)
+        add_record_note(
+          diagnostics, "Z220", "error", "CNAME owner also has other record data",
+          record,
+        )
       }
     }
     if record.record_type == "NS" && record.rdata.length() == 1 {
       let target = absolute_rdata_name(record, 0, zone.origin)
       if aliases.get(target) is Some(_) {
-        add_record_note(diagnostics, "Z221", "warning", "NS target is a CNAME alias", record)
+        add_record_note(
+          diagnostics, "Z221", "warning", "NS target is a CNAME alias", record,
+        )
       }
     }
     if record.record_type == "MX" && record.rdata.length() == 2 {
       let target = absolute_rdata_name(record, 1, zone.origin)
       if aliases.get(target) is Some(_) {
-        add_record_note(diagnostics, "Z222", "warning", "MX target is a CNAME alias", record)
+        add_record_note(
+          diagnostics, "Z222", "warning", "MX target is a CNAME alias", record,
+        )
       }
     }
   }
@@ -152,7 +207,9 @@ fn check_alias_cycles(zone : Zone, diagnostics : Array[Diagnostic]) -> Unit {
     while steps <= zone.records.length() {
       if visited.get(current) is Some(_) {
         if current == start {
-          add_record_note(diagnostics, "Z223", "error", "CNAME cycle returns to this owner", record)
+          add_record_note(
+            diagnostics, "Z223", "error", "CNAME cycle returns to this owner", record,
+          )
           reported.set(start, true)
         }
         break

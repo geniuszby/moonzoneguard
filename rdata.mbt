@@ -88,7 +88,11 @@ pub fn valid_ipv6(value : String) -> Bool {
   } else if !compressed {
     return false
   }
-  if compressed { groups < 8 } else { groups == 8 }
+  if compressed {
+    groups < 8
+  } else {
+    groups == 8
+  }
 }
 
 ///|
@@ -108,14 +112,16 @@ fn require_rdata_length(
   if record.rdata.length() == expected {
     true
   } else {
-    diagnostics.push(diagnostic(
-      "Z100",
-      "error",
-      "\{record.record_type} requires \{expected} RDATA fields; found \{record.rdata.length()}",
-      record.line,
-      record.column,
-      owner=record.owner,
-    ))
+    diagnostics.push(
+      diagnostic(
+        "Z100",
+        "error",
+        "\{record.record_type} requires \{expected} RDATA fields; found \{record.rdata.length()}",
+        record.line,
+        record.column,
+        owner=record.owner,
+      ),
+    )
     false
   }
 }
@@ -129,19 +135,24 @@ fn check_domain_field(
 ) -> Unit {
   let name = absolute_rdata_name(record, index, origin)
   if !valid_domain_name(name) {
-    diagnostics.push(diagnostic(
-      "Z101",
-      "error",
-      "invalid domain name in \{record.record_type} data: \{record.rdata[index]}",
-      record.line,
-      record.column,
-      owner=record.owner,
-    ))
+    diagnostics.push(
+      diagnostic(
+        "Z101",
+        "error",
+        "invalid domain name in \{record.record_type} data: \{record.rdata[index]}",
+        record.line,
+        record.column,
+        owner=record.owner,
+      ),
+    )
   }
 }
 
 ///|
-fn check_address_record(record : ResourceRecord, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_address_record(
+  record : ResourceRecord,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   if !require_rdata_length(record, 1, diagnostics) {
     return
   }
@@ -151,67 +162,103 @@ fn check_address_record(record : ResourceRecord, diagnostics : Array[Diagnostic]
     valid_ipv6(record.rdata[0])
   }
   if !valid {
-    diagnostics.push(diagnostic(
-      "Z102",
-      "error",
-      "invalid \{record.record_type} address: \{record.rdata[0]}",
-      record.line,
-      record.column,
-      owner=record.owner,
-    ))
+    diagnostics.push(
+      diagnostic(
+        "Z102",
+        "error",
+        "invalid \{record.record_type} address: \{record.rdata[0]}",
+        record.line,
+        record.column,
+        owner=record.owner,
+      ),
+    )
   }
 }
 
 ///|
-fn check_soa(record : ResourceRecord, origin : String, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_soa(
+  record : ResourceRecord,
+  origin : String,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   if !require_rdata_length(record, 7, diagnostics) {
     return
   }
   check_domain_field(record, 0, origin, diagnostics)
   check_domain_field(record, 1, origin, diagnostics)
   if parse_serial(record.rdata[2]) is None {
-    diagnostics.push(diagnostic(
-      "Z103",
-      "error",
-      "SOA serial must be a 32-bit unsigned decimal integer",
-      record.line,
-      record.column,
-      owner=record.owner,
-    ))
-  }
-  for i in 3..<7 {
-    if parse_ttl(record.rdata[i]) is None {
-      diagnostics.push(diagnostic(
+    diagnostics.push(
+      diagnostic(
         "Z103",
         "error",
-        "SOA numeric or duration field is invalid: \{record.rdata[i]}",
+        "SOA serial must be a 32-bit unsigned decimal integer",
         record.line,
         record.column,
         owner=record.owner,
-      ))
+      ),
+    )
+  }
+  for i in 3..<7 {
+    if parse_ttl(record.rdata[i]) is None {
+      diagnostics.push(
+        diagnostic(
+          "Z103",
+          "error",
+          "SOA numeric or duration field is invalid: \{record.rdata[i]}",
+          record.line,
+          record.column,
+          owner=record.owner,
+        ),
+      )
     }
   }
 }
 
 ///|
-fn check_mx(record : ResourceRecord, origin : String, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_mx(
+  record : ResourceRecord,
+  origin : String,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   if !require_rdata_length(record, 2, diagnostics) {
     return
   }
   if !number_in_range(record.rdata[0], 0, 65535) {
-    diagnostics.push(diagnostic("Z104", "error", "MX preference must be 0..65535", record.line, record.column, owner=record.owner))
+    diagnostics.push(
+      diagnostic(
+        "Z104",
+        "error",
+        "MX preference must be 0..65535",
+        record.line,
+        record.column,
+        owner=record.owner,
+      ),
+    )
   }
   check_domain_field(record, 1, origin, diagnostics)
 }
 
 ///|
-fn check_srv(record : ResourceRecord, origin : String, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_srv(
+  record : ResourceRecord,
+  origin : String,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   if !require_rdata_length(record, 4, diagnostics) {
     return
   }
   for i in 0..<3 {
     if !number_in_range(record.rdata[i], 0, 65535) {
-      diagnostics.push(diagnostic("Z105", "error", "SRV priority, weight, and port must be 0..65535", record.line, record.column, owner=record.owner))
+      diagnostics.push(
+        diagnostic(
+          "Z105",
+          "error",
+          "SRV priority, weight, and port must be 0..65535",
+          record.line,
+          record.column,
+          owner=record.owner,
+        ),
+      )
       break
     }
   }
@@ -224,31 +271,60 @@ fn check_caa(record : ResourceRecord, diagnostics : Array[Diagnostic]) -> Unit {
     return
   }
   if !number_in_range(record.rdata[0], 0, 255) {
-    diagnostics.push(diagnostic("Z106", "error", "CAA flags must be 0..255", record.line, record.column, owner=record.owner))
+    diagnostics.push(
+      diagnostic(
+        "Z106",
+        "error",
+        "CAA flags must be 0..255",
+        record.line,
+        record.column,
+        owner=record.owner,
+      ),
+    )
   }
   if record.rdata[1].length() == 0 || record.rdata[1].length() > 15 {
-    diagnostics.push(diagnostic("Z107", "error", "CAA tag length must be 1..15", record.line, record.column, owner=record.owner))
+    diagnostics.push(
+      diagnostic(
+        "Z107",
+        "error",
+        "CAA tag length must be 1..15",
+        record.line,
+        record.column,
+        owner=record.owner,
+      ),
+    )
   }
 }
 
 ///|
-fn check_record_data(record : ResourceRecord, origin : String, diagnostics : Array[Diagnostic]) -> Unit {
+fn check_record_data(
+  record : ResourceRecord,
+  origin : String,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
   match record.record_type {
     "A" | "AAAA" => check_address_record(record, diagnostics)
-    "NS" | "CNAME" | "PTR" => {
+    "NS" | "CNAME" | "PTR" =>
       if require_rdata_length(record, 1, diagnostics) {
         check_domain_field(record, 0, origin, diagnostics)
       }
-    }
     "SOA" => check_soa(record, origin, diagnostics)
     "MX" => check_mx(record, origin, diagnostics)
     "SRV" => check_srv(record, origin, diagnostics)
     "CAA" => check_caa(record, diagnostics)
-    "TXT" | "SPF" => {
+    "TXT" | "SPF" =>
       if record.rdata.length() == 0 {
-        diagnostics.push(diagnostic("Z108", "error", "text record requires at least one string", record.line, record.column, owner=record.owner))
+        diagnostics.push(
+          diagnostic(
+            "Z108",
+            "error",
+            "text record requires at least one string",
+            record.line,
+            record.column,
+            owner=record.owner,
+          ),
+        )
       }
-    }
     _ => ()
   }
 }

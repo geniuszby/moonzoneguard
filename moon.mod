@@ -15,15 +15,15 @@ version = "0.1.0"
 
 readme = "README.mbt.md"
 
-repository = ""
+repository = "https://github.com/geniuszby/moonzoneguard"
 
 license = "Apache-2.0"
 
-keywords = []
+keywords = [ "dns", "zone", "linter", "diff" ]
 
-preferred_target = "wasm"
+preferred_target = "js"
 
-description = ""
+description = "Offline DNS zone-file validation and revision analysis"
 
 import {
   "moonbitlang/x@0.4.49",

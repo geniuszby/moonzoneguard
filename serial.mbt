@@ -44,7 +44,9 @@ pub fn compare_serial(before : UInt, after : UInt) -> SerialOrder {
 ///|
 fn apex_serial(zone : Zone) -> UInt? {
   for record in zone.records {
-    if record.owner == zone.origin && record.record_type == "SOA" && record.rdata.length() == 7 {
+    if record.owner == zone.origin &&
+      record.record_type == "SOA" &&
+      record.rdata.length() == 7 {
       return parse_serial(record.rdata[2])
     }
   }

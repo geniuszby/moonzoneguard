@@ -3,17 +3,18 @@ fn usage() -> Unit {
   println("MoonZoneGuard — offline DNS zone review")
   println("Usage:")
   println("  moonzoneguard check <zone-file> <origin> [text|json|markdown]")
-  println("  moonzoneguard diff <before-file> <after-file> <origin> [text|json]")
+  println(
+    "  moonzoneguard diff <before-file> <after-file> <origin> [text|json]",
+  )
   println("  moonzoneguard stats <zone-file> <origin>")
 }
 
 ///|
 fn load(path : String) -> String? {
-  try {
-    Some(@fs.read_file_to_string(path))
-  } catch {
+  Some(@fs.read_file_to_string(path)) catch {
     _ => {
       println("Cannot read \{path}")
+      @sys.exit(2)
       None
     }
   }
@@ -24,12 +25,14 @@ fn main {
   let args = @env.args()
   if args.length() < 3 {
     usage()
+    @sys.exit(2)
     return
   }
   match args[2] {
     "check" => {
       if args.length() < 5 {
         usage()
+        @sys.exit(2)
         return
       }
       match load(args[3]) {
@@ -41,7 +44,13 @@ fn main {
             "json" => println(@lib.render_diagnostics_json(findings))
             "markdown" => println(@lib.render_diagnostics_markdown(findings))
             "text" => println(@lib.render_diagnostics_text(findings))
-            _ => usage()
+            _ => {
+              usage()
+              @sys.exit(2)
+            }
+          }
+          if @lib.error_count(findings) > 0 {
+            @sys.exit(1)
           }
         }
       }
@@ -49,6 +58,7 @@ fn main {
     "diff" => {
       if args.length() < 6 {
         usage()
+        @sys.exit(2)
         return
       }
       match (load(args[3]), load(args[4])) {
@@ -64,6 +74,10 @@ fn main {
             println(@lib.render_diff_text(diff))
           } else {
             usage()
+            @sys.exit(2)
+          }
+          if @lib.error_count(diff.diagnostics) > 0 {
+            @sys.exit(1)
           }
         }
         _ => ()
@@ -72,6 +86,7 @@ fn main {
     "stats" => {
       if args.length() < 5 {
         usage()
+        @sys.exit(2)
         return
       }
       match load(args[3]) {
@@ -83,9 +98,15 @@ fn main {
           println("records: \{zone.records.length()}")
           println("errors: \{@lib.error_count(findings)}")
           println("warnings: \{@lib.warning_count(findings)}")
+          if @lib.error_count(findings) > 0 {
+            @sys.exit(1)
+          }
         }
       }
     }
-    _ => usage()
+    _ => {
+      usage()
+      @sys.exit(2)
+    }
   }
 }

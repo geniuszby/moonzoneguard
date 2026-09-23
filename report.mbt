@@ -32,7 +32,12 @@ fn json_escaped(value : String) -> String {
 }
 
 ///|
-fn write_json_field(out : StringBuilder, name : String, value : String, comma : Bool) -> Unit {
+fn write_json_field(
+  out : StringBuilder,
+  name : String,
+  value : String,
+  comma : Bool,
+) -> Unit {
   if comma {
     out.write_char(',')
   }
@@ -42,7 +47,12 @@ fn write_json_field(out : StringBuilder, name : String, value : String, comma : 
 }
 
 ///|
-fn write_json_number(out : StringBuilder, name : String, value : Int, comma : Bool) -> Unit {
+fn write_json_number(
+  out : StringBuilder,
+  name : String,
+  value : Int,
+  comma : Bool,
+) -> Unit {
   if comma {
     out.write_char(',')
   }
@@ -100,7 +110,9 @@ pub fn render_diagnostics_text(items : Array[Diagnostic]) -> String {
     }
     out.write_char('\n')
   }
-  out.write_string("\{error_count(items)} error(s), \{warning_count(items)} warning(s)\n")
+  out.write_string(
+    "\{error_count(items)} error(s), \{warning_count(items)} warning(s)\n",
+  )
   out.to_string()
 }
 
@@ -124,10 +136,16 @@ fn markdown_escape(text : String) -> String {
 pub fn render_diagnostics_markdown(items : Array[Diagnostic]) -> String {
   let out = StringBuilder::new()
   out.write_string("# MoonZoneGuard report\n\n")
-  out.write_string("Errors: \{error_count(items)} · Warnings: \{warning_count(items)}\n\n")
-  out.write_string("| Location | Severity | Rule | Finding |\n| --- | --- | --- | --- |\n")
+  out.write_string(
+    "Errors: \{error_count(items)} · Warnings: \{warning_count(items)}\n\n",
+  )
+  out.write_string(
+    "| Location | Severity | Rule | Finding |\n| --- | --- | --- | --- |\n",
+  )
   for item in items {
-    out.write_string("| \{item.line}:\{item.column} | \{item.severity} | \{item.code} | \{markdown_escape(item.message)} |\n")
+    out.write_string(
+      "| \{item.line}:\{item.column} | \{item.severity} | \{item.code} | \{markdown_escape(item.message)} |\n",
+    )
   }
   if items.length() == 0 {
     out.write_string("| — | — | — | No findings |\n")
@@ -222,6 +240,8 @@ pub fn render_diff_text(diff : ZoneDiff) -> String {
     out.write_string(diagnostic_line(item))
     out.write_char('\n')
   }
-  out.write_string("\{diff.changes.length()} change(s), \{error_count(diff.diagnostics)} error(s)\n")
+  out.write_string(
+    "\{diff.changes.length()} change(s), \{error_count(diff.diagnostics)} error(s)\n",
+  )
   out.to_string()
 }

@@ -17,7 +17,8 @@ fn valid_label(label : String) -> Bool {
   if !(ascii_alnum(chars[0]) || chars[0] == '_') {
     return false
   }
-  if !(ascii_alnum(chars[chars.length() - 1]) || chars[chars.length() - 1] == '_') {
+  if !(ascii_alnum(chars[chars.length() - 1]) ||
+    chars[chars.length() - 1] == '_') {
     return false
   }
   for c in chars {
@@ -53,7 +54,11 @@ pub fn valid_domain_name(name : String) -> Bool {
 }
 
 ///|
-fn absolute_rdata_name(record : ResourceRecord, index : Int, _origin : String) -> String {
+fn absolute_rdata_name(
+  record : ResourceRecord,
+  index : Int,
+  _origin : String,
+) -> String {
   absolute_name(record.rdata[index], record.origin)
 }
 
