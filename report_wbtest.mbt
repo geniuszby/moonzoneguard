@@ -102,3 +102,27 @@ test "diff report describes ttl change without removal" {
   assert_eq(json.contains("\"before_ttl\":3600"), true)
   assert_eq(json.contains("\"after_ttl\":7200"), true)
 }
+
+///|
+test "diff json includes forward serial order" {
+  let before = serial_zone("1", "")
+  let after = serial_zone("2", "")
+  let json = render_diff_json(compare_zones(before, after))
+  assert_eq(json.contains("\"serial_order\":\"forward\""), true)
+}
+
+///|
+test "diff json includes undefined serial order" {
+  let before = serial_zone("0", "")
+  let after = serial_zone("2147483648", "")
+  let json = render_diff_json(compare_zones(before, after))
+  assert_eq(json.contains("\"serial_order\":\"undefined\""), true)
+}
+
+///|
+test "diff json uses null when no serial is available" {
+  let before = parse_zone("www IN A 192.0.2.1\n", "example.org.")
+  let after = parse_zone("www IN A 192.0.2.2\n", "example.org.")
+  let json = render_diff_json(compare_zones(before, after))
+  assert_eq(json.contains("\"serial_order\":null"), true)
+}

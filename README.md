@@ -33,7 +33,7 @@ moon run cmd/main --target js normalize examples/good.zone example.org.
 - 两份区域文件的新增、移除、TTL 变化及 SOA serial 的 RFC 1982 序列比较。
 - 可选团队策略（TTL 上下限、顶点 NS 数量、邮件 IPv6、禁用记录类型）、记录统计、CNAME 路径追踪、本地区域查询、规范化输出和变更风险摘要。
 
-诊断包含规则代码、严重程度、消息、行列和所有者。JSON 格式适合 CI 消费；Markdown 格式适合贴到代码审查。三个完整操作流程及预期结果见 [SCENARIOS.md](SCENARIOS.md)。
+诊断包含规则代码、严重程度、消息、行列和所有者。JSON 格式适合 CI 消费，其中差异报告的 `serial_order` 字段直接给出 SOA 序列比较结果；Markdown 格式适合贴到代码审查。三个完整操作流程及预期结果见 [SCENARIOS.md](SCENARIOS.md)。
 
 ## 运行测试与构建
 
@@ -44,7 +44,7 @@ moon build --target js
 moon fmt --check
 ```
 
-主要算法不依赖文件系统；`cmd/main` 是可执行入口。当前仓库有 127 个自动化测试。CI 在 Linux 上重复以上检查并运行 `examples/good.zone` 与 `examples/bad.zone`。
+主要算法不依赖文件系统；`cmd/main` 是可执行入口。当前仓库有 134 个自动化测试。CI 在 Linux 上重复以上检查，并执行 [三个使用场景](SCENARIOS.md) 的示例命令。
 
 ## 边界
 

@@ -207,7 +207,15 @@ pub fn render_diff_json(diff : ZoneDiff) -> String {
     }
     write_diagnostic_json(out, diff.diagnostics[i])
   }
-  out.write_string("]}")
+  out.write_string("],\"serial_order\":")
+  match diff.serial_order {
+    Some(Same) => out.write_string("\"same\"")
+    Some(Forward) => out.write_string("\"forward\"")
+    Some(Backward) => out.write_string("\"backward\"")
+    Some(Undefined) => out.write_string("\"undefined\"")
+    None => out.write_string("null")
+  }
+  out.write_char('}')
   out.to_string()
 }
 
