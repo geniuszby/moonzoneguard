@@ -1,0 +1,6 @@
+$ORIGIN app.example.org.
+$TTL 1h
+@ IN SOA ns2.app.example.org. hostmaster.app.example.org. 2026092402 1h 15m 1w 1h
+@ IN NS ns2.app.example.org.
+ns1 IN A 192.0.2.11
+ns2 IN A 192.0.2.12

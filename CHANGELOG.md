@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-09-24
+
+- Add bounded parent/child delegation rollout analysis with four snapshots,
+  glue and authoritative address checks, counterexample evidence, and CLI output.
+- Gate rollout recommendations on both zones' SOA serial preflight checks.
+- Add bounded multi-zone planning with safe-order counts, required precedence,
+  viable first steps, and counterexample paths.
 - Validate the initial zone origin and `$ORIGIN` directives.
 - Reject revision analysis when either zone fails validation.
 - Document three reproducible review scenarios and run them in CI.

@@ -1,0 +1,4 @@
+# origin before-file after-file (paths relative to current directory)
+example.org. examples/rollout-parent-before.zone examples/rollout-parent-after.zone
+app.example.org. examples/plan-child-before.zone examples/plan-child-after.zone
+dev.app.example.org. examples/plan-grandchild-before.zone examples/plan-grandchild-after.zone

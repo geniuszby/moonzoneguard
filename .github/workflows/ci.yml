@@ -45,3 +45,7 @@ jobs:
         run: |
           moon run cmd/main --target js policy examples/good.zone example.org. examples/review.policy
           moon run cmd/main --target js lookup examples/good.zone example.org. docs A
+      - name: Parent-child rollout scenario
+        run: moon run cmd/main --target js rollout examples/rollout-parent-before.zone examples/rollout-parent-after.zone examples/rollout-child-before.zone examples/rollout-child-after.zone example.org. app.example.org.
+      - name: Three-zone deployment plan
+        run: moon run cmd/main --target js plan examples/three-zone.plan

@@ -4,6 +4,10 @@ fn usage() -> Unit {
   println("Usage:")
   println("  moonzoneguard check <zone-file> <origin> [text|json|markdown]")
   println(
+    "  moonzoneguard rollout <parent-before> <parent-after> <child-before> <child-after> <parent-origin> <child-origin> [text|json]",
+  )
+  println("  moonzoneguard plan <manifest-file> [text|json]")
+  println(
     "  moonzoneguard diff <before-file> <after-file> <origin> [text|json]",
   )
   println(
@@ -32,6 +36,45 @@ fn load(path : String) -> String? {
 }
 
 ///|
+/// Manifest rows contain: origin before-file after-file. Paths are relative
+/// to the process working directory, as with the other CLI commands.
+fn load_plan_manifest(input : String) -> Array[@lib.ZoneRevision]? {
+  let revisions : Array[@lib.ZoneRevision] = []
+  let lines = input.split("\n").collect()
+  for index in 0..<lines.length() {
+    let line = lines[index].to_owned().trim().to_owned()
+    if line == "" || line.to_array()[0] == '#' {
+      continue
+    }
+    let parts : Array[String] = []
+    for item in line.split(" ") {
+      let value = item.to_owned()
+      if value != "" {
+        parts.push(value)
+      }
+    }
+    if parts.length() != 3 {
+      println(
+        "Manifest line \{index + 1}: expected origin before-file after-file",
+      )
+      return None
+    }
+    match (load(parts[1]), load(parts[2])) {
+      (Some(before), Some(after)) => {
+        let origin = @lib.absolute_name("@", parts[0])
+        revisions.push({
+          origin,
+          before: @lib.parse_zone(before, origin),
+          after: @lib.parse_zone(after, origin),
+        })
+      }
+      _ => return None
+    }
+  }
+  Some(revisions)
+}
+
+///|
 fn main {
   let args = @env.args()
   if args.length() < 3 {
@@ -40,6 +83,74 @@ fn main {
     return
   }
   match args[2] {
+    "plan" => {
+      if args.length() < 4 {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      let format = if args.length() > 4 { args[4] } else { "text" }
+      if format != "text" && format != "json" {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      match load(args[3]) {
+        Some(input) =>
+          match load_plan_manifest(input) {
+            Some(revisions) => {
+              let plan = @lib.plan_delegation_rollout(revisions)
+              if format == "json" {
+                println(@lib.render_deployment_plan_json(plan))
+              } else {
+                println(@lib.render_deployment_plan_text(plan))
+              }
+              if plan.status != "safe-order" {
+                @sys.exit(1)
+              }
+            }
+            None => @sys.exit(2)
+          }
+        None => ()
+      }
+    }
+    "rollout" => {
+      if args.length() < 9 {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      let format = if args.length() > 9 { args[9] } else { "text" }
+      if format != "text" && format != "json" {
+        usage()
+        @sys.exit(2)
+        return
+      }
+      match (load(args[3]), load(args[4]), load(args[5]), load(args[6])) {
+        (
+          Some(parent_before),
+          Some(parent_after),
+          Some(child_before),
+          Some(child_after),
+        ) => {
+          let result = @lib.analyze_delegation_rollout(
+            @lib.parse_zone(parent_before, args[7]),
+            @lib.parse_zone(parent_after, args[7]),
+            @lib.parse_zone(child_before, args[8]),
+            @lib.parse_zone(child_after, args[8]),
+          )
+          if format == "json" {
+            println(@lib.render_delegation_rollout_json(result))
+          } else {
+            println(@lib.render_delegation_rollout_text(result))
+          }
+          if result.recommendation == "no-safe-order" {
+            @sys.exit(1)
+          }
+        }
+        _ => ()
+      }
+    }
     "check" => {
       if args.length() < 5 {
         usage()

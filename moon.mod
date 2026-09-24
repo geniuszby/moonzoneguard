@@ -11,7 +11,7 @@
 
 name = "geniuszby/moonzoneguard"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.md"
 
@@ -19,11 +19,11 @@ repository = "https://github.com/geniuszby/moonzoneguard"
 
 license = "Apache-2.0"
 
-keywords = [ "dns", "zone", "linter", "diff" ]
+keywords = [ "dns", "zone", "delegation", "rollout" ]
 
 preferred_target = "js"
 
-description = "Offline DNS zone-file validation and revision analysis"
+description = "Offline DNS delegation rollout analysis across parent and child zones"
 
 import {
   "moonbitlang/x@0.4.49",
