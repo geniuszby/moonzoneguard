@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Include input zone order and updated zone names in deployment JSON snapshots,
+  so CI consumers can interpret state masks without retaining the manifest.
 ## 0.2.0 - 2026-09-24
 
 - Add bounded parent/child delegation rollout analysis with four snapshots,

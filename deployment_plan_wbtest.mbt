@@ -49,6 +49,13 @@ test "planner finds only safe three-zone publication order" {
   assert_eq(plan.order[2], "example.org.")
   assert_eq(plan.safe_order_count, 1)
   assert_eq(plan.required_precedence.length(), 3)
+  assert_eq(plan.zone_order[0], "example.org.")
+  assert_eq(plan.zone_order[2], "dev.app.example.org.")
+  let json = render_deployment_plan_json(plan)
+  assert_true(json.contains("\"mask\":0,\"updated_zones\":[]"))
+  assert_true(
+    json.contains("\"mask\":4,\"updated_zones\":[\"dev.app.example.org.\"]"),
+  )
   assert_true(
     render_deployment_plan_json(plan).contains("\"status\":\"safe-order\""),
   )

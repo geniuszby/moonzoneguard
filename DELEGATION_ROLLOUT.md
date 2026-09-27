@@ -35,6 +35,8 @@ moon run cmd/main --target js plan examples/three-zone.plan json
 
 ## 当前规则
 
+JSON 报告中的 `zone_order` 保留清单的区域顺序，状态编号 `mask` 的第 i 位对应 `zone_order[i]`（最低位为第 0 位）。每个快照的 `updated_zones` 直接列出使用变更后文件的区域；空数组表示初始状态，全部区域出现表示最终状态。它与实际发布顺序 `order` 是不同的字段。
+
 - `G001`：子区原点必须严格位于父区之下。
 - `G002`：父区在子区原点必须有委派 NS。
 - `G003`：子区顶点必须有 NS。

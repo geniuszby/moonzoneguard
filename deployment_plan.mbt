@@ -37,6 +37,7 @@ pub(all) struct DeploymentPrecedence {
 /// step updates exactly one zone and every visited snapshot passes.
 pub(all) struct DeploymentPlan {
   status : String
+  zone_order : Array[String]
   order : Array[String]
   snapshots : Array[DeploymentSnapshot]
   preflight : Array[DelegationFinding]
@@ -403,10 +404,15 @@ fn deployment_required_precedence(
 pub fn plan_delegation_rollout(
   revisions : Array[ZoneRevision],
 ) -> DeploymentPlan {
+  let zone_order : Array[String] = []
+  for revision in revisions {
+    zone_order.push(revision.origin)
+  }
   let preflight = deployment_preflight(revisions)
   if revisions.length() < 2 || revisions.length() > 6 {
     return {
       status: "invalid-input",
+      zone_order,
       order: [],
       snapshots: [],
       preflight,
@@ -440,6 +446,7 @@ pub fn plan_delegation_rollout(
   if deployment_has_error(preflight) {
     return {
       status: "invalid-input",
+      zone_order,
       order: [],
       snapshots,
       preflight,
@@ -476,6 +483,7 @@ pub fn plan_delegation_rollout(
   if predecessors[final_mask] < 0 {
     {
       status: "no-safe-order",
+      zone_order,
       order: [],
       snapshots,
       preflight,
@@ -490,6 +498,7 @@ pub fn plan_delegation_rollout(
   } else {
     {
       status: "safe-order",
+      zone_order,
       order: deployment_reconstruct_order(
         final_mask, predecessors, weights, revisions,
       ),
@@ -526,6 +535,14 @@ pub fn render_deployment_plan_json(plan : DeploymentPlan) -> String {
   let out = StringBuilder()
   out.write_char('{')
   write_json_field(out, "status", plan.status, false)
+  out.write_string(",\"zone_order\":[")
+  for i in 0..<plan.zone_order.length() {
+    if i > 0 {
+      out.write_char(',')
+    }
+    out.write_string(json_escaped(plan.zone_order[i]))
+  }
+  out.write_char(']')
   write_json_number(out, "safe_order_count", plan.safe_order_count, true)
   write_json_number(out, "blocked_state_count", plan.blocked_state_count, true)
   write_json_number(out, "examined_state_count", plan.snapshots.length(), true)
@@ -576,6 +593,20 @@ pub fn render_deployment_plan_json(plan : DeploymentPlan) -> String {
     let snapshot = plan.snapshots[i]
     out.write_string("{\"mask\":")
     out.write_string(snapshot.mask.to_string())
+    out.write_string(",\"updated_zones\":[")
+    let mut weight = 1
+    let mut written = false
+    for origin in plan.zone_order {
+      if deployment_updated(snapshot.mask, weight) {
+        if written {
+          out.write_char(',')
+        }
+        out.write_string(json_escaped(origin))
+        written = true
+      }
+      weight *= 2
+    }
+    out.write_char(']')
     out.write_string(",\"blocked\":")
     out.write_string(if snapshot.blocked { "true" } else { "false" })
     out.write_string(",\"findings\":[")
