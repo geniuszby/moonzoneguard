@@ -11,7 +11,7 @@
 
 name = "geniuszby/moonzoneguard"
 
-version = "0.2.0"
+version = "0.3.0"
 
 readme = "README.md"
 
@@ -23,8 +23,9 @@ keywords = [ "dns", "zone", "delegation", "rollout" ]
 
 preferred_target = "js"
 
-description = "Offline DNS delegation rollout analysis across parent and child zones"
+description = "Bounded DNS delegation and DS/DNSKEY digest rollout analysis"
 
 import {
   "moonbitlang/x@0.4.49",
+  "gmlewis/sha256@0.17.32",
 }

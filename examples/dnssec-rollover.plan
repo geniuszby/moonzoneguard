@@ -1,0 +1,3 @@
+# Offline digest association fixture; RRSIG verification is not implemented.
+example.org. examples/dnssec-parent-before.zone examples/dnssec-parent-after.zone
+app.example.org. examples/dnssec-child-before.zone examples/dnssec-child-after.zone

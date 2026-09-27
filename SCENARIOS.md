@@ -1,5 +1,14 @@
 # 可复现的使用场景
 
+## DS/DNSKEY 密钥轮换的发布顺序
+
+```sh
+moon run cmd/main --target js plan examples/dnssec-rollover.plan json
+moon run cmd/main --target js rollout examples/dnssec-parent-before.zone examples/dnssec-parent-after.zone examples/dnssec-child-before.zone examples/dnssec-child-unsafe.zone example.org. app.example.org.
+```
+
+第一条命令建议先在子区保留旧 key、加入新 key，再更新父区 DS。第二条命令直接替换子区 key，虽然最终 DS/DNSKEY 摘要一致，但两个中间状态均触发 S105，返回 1。样例不包含签名验证，只检查本地摘要关联；详见 `DNSSEC_LINK.md`。
+
 以下命令在仓库根目录执行，需先安装 MoonBit 工具链并运行 `moon update`。所有输入文件都在 `examples/`，工具不会访问公网 DNS 或修改它们。
 
 ## 场景一：权威 DNS 配置上线前检查

@@ -8,6 +8,8 @@ MoonZoneGuard 是用 MoonBit 实现的离线 DNS 区域文件检查与变更审�
 
 `plan` 将此模型推广到 2 至 6 个有父子关系的区域，枚举最多 64 个发布状态，计算可行顺序数量、必须遵守的先后关系，并在无可行顺序时提供一条阻断反例。
 
+有 DS 的父子关系还会检查 DS/DNSKEY 摘要关联：解析子区顶点 DNSKEY，计算 RFC 4034 key tag 和 RFC 4509 SHA-256 DS 摘要。父区过早切换 DS、子区过早移除旧 key、未匹配的摘要或删除全部 DS 会影响发布计划。这个功能不验证 RRSIG 或密钥的密码学有效性。
+
 ## 快速开始
 
 安装 [MoonBit 工具链](https://www.moonbitlang.com/download/)，克隆仓库后在项目根目录执行：
@@ -25,6 +27,7 @@ moon run cmd/main --target js lookup examples/good.zone example.org. docs A
 moon run cmd/main --target js normalize examples/good.zone example.org.
 moon run cmd/main --target js rollout examples/rollout-parent-before.zone examples/rollout-parent-after.zone examples/rollout-child-before.zone examples/rollout-child-after.zone example.org. app.example.org.
 moon run cmd/main --target js plan examples/three-zone.plan
+moon run cmd/main --target js plan examples/dnssec-rollover.plan
 ```
 
 `check` 返回 0 表示没有 error，1 表示有 error，2 表示参数或文件错误。warning 不使检查失败。`diff` 在 SOA serial 未按要求前进时返回 1。输出格式：`text`、`json`、`markdown`（差异比较支持前两者）。`origin` 请写为末尾带点的绝对域名。
@@ -34,6 +37,8 @@ moon run cmd/main --target js plan examples/three-zone.plan
 `rollout` 接收四份文件和两个区原点；输出 `text` 或 `json`。示例结论为 `child-first`：父区先切换到 `ns2.app.example.org.` 时，旧子区仍缺少该名称的权威地址记录。它也检查两个区域各自的 SOA serial 是否按 RFC 1982 前进。若初始或最终状态无效、或两种顺序均触发错误，返回 1。详细输入与模型边界见 [跨区域发布说明](DELEGATION_ROLLOUT.md)。
 
 `plan` 从三列清单读取区域原点、变更前文件和变更后文件；示例输出唯一的安全顺序：`dev.app.example.org.` → `app.example.org.` → `example.org.`。路径相对于运行命令时的当前目录。输出 `json` 便于 CI 消费。
+
+DNSSEC 示例保持 NS 和 Glue 不变，仅更换 DS/DNSKEY。它推荐先在子区预发布新 key，再更新父区 DS；直接替换旧 key 的反例会阻断两种顺序。规则、标准向量和功能边界见 [DS/DNSKEY 关联说明](DNSSEC_LINK.md)，与初版的差异和验收证据见 [重报说明](RESUBMISSION_EVIDENCE.md)。
 
 ## 能检查什么
 
@@ -58,9 +63,9 @@ moon fmt --check
 
 ## 边界
 
-这是本地静态分析器，不请求公共 DNS，也不修改配置文件。`lookup` 只做精确名称和 CNAME 跟踪，不模拟通配符或委派。当前支持常见 Internet zone 记录；不展开 `$INCLUDE`、`$GENERATE`，不完整支持 RFC 1035 的转义八位字节及 DNSSEC 记录数据校验。未知主文件指令会报告错误；部分已识别的高级 RR 类型只做通用解析，不提供完整数据校验。提示区内目标没有 A/AAAA 时只给 warning，因为外部委派和特殊配置需要人工判断。
+这是本地静态分析器，不请求公共 DNS，也不修改配置文件。`lookup` 只做精确名称和 CNAME 跟踪，不模拟通配符或委派。当前支持常见 Internet zone 记录；不展开 `$INCLUDE`、`$GENERATE`，不完整支持 RFC 1035 的转义八位字节。DNSSEC 仅支持本文说明的 DS/DNSKEY 摘要关联，其他高级 RR 类型只做通用解析。提示区内目标没有 A/AAAA 时只给 warning，因为外部委派和特殊配置需要人工判断。
 
-跨区域检查采用每个区域文件一次原子发布的有界模型，最多六个区域。它不读取线上权威服务器状态，不模拟 DNS 缓存、传播时延或 DNSSEC。`pass` 只表示在这些输入和本地规则下未发现错误，不能保证实际互联网可达。
+跨区域检查采用每个区域文件一次原子发布的有界模型，最多六个区域。它不读取线上权威服务器状态，不模拟 DNS 缓存、传播时延，不验证 RRSIG/NSEC 或完整 DNSSEC 信任链。`pass` 只表示在这些输入和本地规则下未发现错误，不能保证实际互联网可达。
 
 ## 项目与许可证
 

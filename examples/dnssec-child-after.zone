@@ -1,0 +1,7 @@
+$ORIGIN app.example.org.
+$TTL 1h
+@ IN SOA ns hostmaster 2026092802 1h 15m 1w 1h
+@ IN NS ns
+ns IN A 192.0.2.53
+@ IN DNSKEY 257 3 15 11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo=
+@ IN DNSKEY 257 3 15 PUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=

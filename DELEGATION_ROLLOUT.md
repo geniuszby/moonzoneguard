@@ -35,6 +35,8 @@ moon run cmd/main --target js plan examples/three-zone.plan json
 
 ## 当前规则
 
+父区发布 DS 时，还运行 [DS/DNSKEY 摘要关联检查](DNSSEC_LINK.md)；S105 会使对应快照阻断，删除全部 DS 的 S107 会使前置检查失败。DNSSEC key 轮换因此可以产生独立于 NS/Glue 的发布顺序约束。
+
 JSON 报告中的 `zone_order` 保留清单的区域顺序，状态编号 `mask` 的第 i 位对应 `zone_order[i]`（最低位为第 0 位）。每个快照的 `updated_zones` 直接列出使用变更后文件的区域；空数组表示初始状态，全部区域出现表示最终状态。它与实际发布顺序 `order` 是不同的字段。
 
 - `G001`：子区原点必须严格位于父区之下。
@@ -53,4 +55,4 @@ JSON 报告中的 `zone_order` 保留清单的区域顺序，状态编号 `mask`
 
 ## 边界
 
-每个区文件被视为一次原子发布。当前不模拟缓存和 TTL 等待、权威服务器传播、DNSSEC 验证或外部 nameserver 地址解析。多区域模式只处理清单中的最近父子关系，不推断未提供区域的真实部署状态。`pass` 表示此有界模型内未发现错误，不代表实际域名始终可达。参考：[RFC 9471 的域内 Glue 分类](https://www.rfc-editor.org/rfc/rfc9471)、[RFC 1982 的序列号比较](https://www.rfc-editor.org/rfc/rfc1982)。
+每个区文件被视为一次原子发布。当前不模拟缓存和 TTL 等待、权威服务器传播或外部 nameserver 地址解析；DNSSEC 只检查 type 2 DS/DNSKEY 摘要关联，不验签。多区域模式只处理清单中的最近父子关系，不推断未提供区域的真实部署状态。`pass` 表示此有界模型内未发现错误，不代表实际域名始终可达。参考：[RFC 9471 的域内 Glue 分类](https://www.rfc-editor.org/rfc/rfc9471)、[RFC 1982 的序列号比较](https://www.rfc-editor.org/rfc/rfc1982)。

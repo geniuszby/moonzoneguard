@@ -49,3 +49,11 @@ jobs:
         run: moon run cmd/main --target js rollout examples/rollout-parent-before.zone examples/rollout-parent-after.zone examples/rollout-child-before.zone examples/rollout-child-after.zone example.org. app.example.org.
       - name: Three-zone deployment plan
         run: moon run cmd/main --target js plan examples/three-zone.plan
+      - name: DNSSEC digest rollover plan
+        run: moon run cmd/main --target js plan examples/dnssec-rollover.plan
+      - name: Reject unsafe DNSKEY replacement
+        run: |
+          if moon run cmd/main --target js rollout examples/dnssec-parent-before.zone examples/dnssec-parent-after.zone examples/dnssec-child-before.zone examples/dnssec-child-unsafe.zone example.org. app.example.org.; then
+            echo "Expected the DS/DNSKEY intermediate mismatch to block rollout"
+            exit 1
+          fi

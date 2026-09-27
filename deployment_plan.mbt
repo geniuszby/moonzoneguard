@@ -424,6 +424,18 @@ pub fn plan_delegation_rollout(
     }
   }
   let parents = nearest_supplied_parents(revisions)
+  for child_index in 0..<revisions.length() {
+    let parent_index = parents[child_index]
+    if parent_index >= 0 {
+      audit_dnssec_transition(
+        revisions[parent_index].before,
+        revisions[parent_index].after,
+        revisions[child_index].origin,
+        revisions[parent_index].origin + "-after",
+        preflight,
+      )
+    }
+  }
   let mut edges = 0
   for parent in parents {
     if parent >= 0 {

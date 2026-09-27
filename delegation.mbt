@@ -234,6 +234,7 @@ fn audit_delegation_pair(
       )
     }
   }
+  audit_dnssec_link(parent, child, parent_source, child_source, findings)
   findings
 }
 
@@ -274,6 +275,13 @@ pub fn analyze_delegation_rollout(
   let preflight : Array[DelegationFinding] = []
   let parent_diff = compare_zones(parent_before, parent_after)
   let child_diff = compare_zones(child_before, child_after)
+  audit_dnssec_transition(
+    parent_before,
+    parent_after,
+    child_before.origin,
+    "parent-after",
+    preflight,
+  )
   for item in parent_diff.diagnostics {
     delegation_finding(
       preflight,
